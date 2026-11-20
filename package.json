@@ -8,5 +8,9 @@
     "icon": "ph-puzzle-piece",
     "optional": true,
     "description": "Evaluate Clojure forms in the local project nREPL managed by hyperd."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hyper-code-harness/clojure-repl"
   }
 }
