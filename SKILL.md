@@ -43,3 +43,30 @@ For JavaScript data instead of EDN text, use `clojureRepl.request({ op: "eval", 
 - `evalForm({ path: "src/demo/greeting.clj", symbol: "greet" })` evaluates one top-level form in its loaded namespace. You can use a one-based `line` instead of `symbol`.
 - `applyAndTest({ path, oldText, newText, tests, rollbackOnFailure: true })` previews an exact change and returns `revision`. To apply, repeat the same call with that revision. It loads the changed source and specified test files, then runs clojure.test in the live JVM. Rollback restores source and reloads it; neither rollback nor interrupt undoes side effects. Reloading does not remove deleted Vars.
 - `namedSession({ name, action: "eval", id, code, format: "json" })` keeps REPL bindings and returns values, stdout, stderr and status separately. To stop a running evaluation, use `namedSession({ name, action: "interrupt", id })` with its exact ID in another call. If interrupted, partial output may be omitted. Close sessions with `action: "close"`.
+
+## Project introspection and navigation
+
+Run `clojureRepl.indexProject({})` in a trusted **local** workspace with the native
+`clj-kondo` command on Hyper's PATH. It indexes existing `src` and `test` directories
+by default. For monorepos, pass `paths: ["src", "modules/example/src"]`. An absolute
+`executable` override selects a trusted local clj-kondo binary. No nREPL or CIDER is
+needed for the static index. The plugin honors the project's clj-kondo config. Lint
+errors may leave some references unresolved; the returned `errors` count is not a
+pass/fail check for indexing. Snapshots are in memory (up to four projects); re-index
+after source changes or a Hyper restart.
+
+- `clojureRepl.projectInfo({ q: "validation" })` searches namespace and Var names.
+- `clojureRepl.projectInfo({ symbol: "example.core" })` shows definitions, namespace
+  imports, and cross-namespace Var references in both directions. Use a qualified
+  Var like `example.core/validate` for its direct references. Results include file,
+  line and column; `limit` and `offset` page each section. A reference is not
+  necessarily a call. Dynamic dispatch and runtime-generated links are not inferred.
+- Open the same data on Canvas with
+  `canvas.show({ args: { fn: "clojureRepl.projectView", params: { root } } })`, using
+  `root` from `indexProject`. Add `symbol` to open a namespace or Var directly.
+  Select a symbol to follow its references, or a file and line to open source.
+
+For a **running JVM**, `clojureRepl.introspect({})` lists loaded namespaces via
+stock nREPL. Add `namespace` to list public Vars or also add `symbol` to read one
+Var's arglists, docstring and source metadata. This is separate from the static
+index and doesn't require CIDER middleware.
